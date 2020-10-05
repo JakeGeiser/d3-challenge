@@ -72,7 +72,7 @@ function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath,
         .domain([d3.min(Data, d => d[chosenYAxis]) * 0.8,
             d3.max(Data, d => d[chosenYAxis]) * 1.2
         ])
-        .range([0, width]);
+        .range([height, 0]);
     
         return yLinearScale;
     
@@ -157,23 +157,41 @@ function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath,
     d3.csv(dataPath).then(function (dataObject, err) {
         if (err) throw err;
 
-        // convert string to numbers (x axis)
-        dataObject.forEach(function (data) {
-            for (let i = 0; i < xKeys.length; i++) {
-                data[xKeys[i]] = +data[xKeys[i]]            
-            }
-            for (let j = 0; j < yKeys.length; j++) {
-                data[yKeys[j]] = +data[yKeys[j]]            
-            } 
-        })
-
+        // convert string to numbers
         for (let i = 0; i < xKeys.length; i++) {
-            data[xKeys[i]] = data[xKeys[i]].map(d => +d);       
+            dataObject[xKeys[i]] = dataObject[xKeys[i]].map(d => +d);       
         }
         for (let j = 0; j < yKeys.length; j++) {
-            data[yKeys[j]] = data[yKeys[j]].map(d => +d);            
+            dataObject[yKeys[j]] = dataObject[yKeys[j]].map(d => +d);            
         } 
         
+        // xLinearScale function above csv import
+        var xLinearScale = xScale(dataObject, chosenXAxis);
+        var yLinearScale = yScale(dataObject, chosenYAxis);
+
+        // Create initial axis functions
+        var bottomAxis = d3.axisBottom(xLinearScale);
+        var leftAxis = d3.axisLeft(yLinearScale);
+
+        // append x axis
+        var xAxis = chartGroup.append("g")
+            .classed("x-axis", true)
+            .attr("transform", `translate(0, ${height})`)
+            .call(bottomAxis);
+
+        // append y axis
+        chartGroup.append("g")
+            .call(leftAxis);
+
+        // append initial circles
+        var circlesGroup = chartGroup.selectAll("circle")
+            .data(dataObject)
+            .enter()
+            .append("circle")
+            .attr("cx", d => xLinearScale(d[chosenXAxis]))
+            .attr("cy", d => yLinearScale(d[chosenYAxis]))
+            .attr("r", 20)
+            .attr("class", "stateCircle");
     })
 
 } 
