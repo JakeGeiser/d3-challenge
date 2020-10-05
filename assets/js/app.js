@@ -104,7 +104,8 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
       }
   
     // function used for updating circles group with new tooltip
-    function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, axisKeysX, axisLabelsX, axisKeysY, axisLabelsY) {
+    function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, axisKeysX, 
+                            axisLabelsX, axisKeysY, axisLabelsY) {
     
         var labelx;
         var labely;
@@ -156,10 +157,10 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
 
         // convert string to numbers
         for (let i = 0; i < xKeys.length; i++) {
-            dataObject[xKeys[i]] = dataObject[xKeys[i]].map(d => +d);       
+            dataObject[xKeys[i]] = +dataObject[xKeys[i]];//.map(d => +d);       
         }
         for (let j = 0; j < yKeys.length; j++) {
-            dataObject[yKeys[j]] = dataObject[yKeys[j]].map(d => +d);            
+            dataObject[yKeys[j]] = +dataObject[yKeys[j]];//.map(d => +d);            
         } 
         
         // xLinearScale function above csv import
@@ -332,7 +333,10 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
             }
         }) // end of labelsGroupY
 
-    }) // end of d3.csv().then()
+    })// end of d3.csv().then()
+    // .catch(function(error) {
+    //     console.log(error);
+    //   }); 
 
 } // end of function scatterMultiAxis
 // x: Poverty, Age, income
@@ -345,5 +349,9 @@ var yKeyInput = ["obesity","smokes","healthcare"];
 var yAxisLabelsInput = ["Obesity (%)","Smokes (%)","No Healthcare (%)"];
 var yTipLabelsInput = ["Obesity (%)","Smokes (%)","No Healthcare (%)"];
 
-scatterMultiAxis(xTipLabelsInput,yTipLabelsInput,xKeyInput,yKeyInput,"../data/data.csv",
+scatterMultiAxis(xTipLabelsInput,yTipLabelsInput,xKeyInput,yKeyInput,"assets/data/data.csv",
     xAxisLabelsInput,yAxisLabelsInput);
+
+// d3.csv("assets/data/data.csv").then(function (data) {
+//     console.log(data)
+// })
