@@ -1,4 +1,4 @@
-function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath,
+function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
                           xAxisLabels,yAxisLabels) {
     // params
     //// xLabels: array of x-axis labels
@@ -192,6 +192,110 @@ function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath,
             .attr("cy", d => yLinearScale(d[chosenYAxis]))
             .attr("r", 20)
             .attr("class", "stateCircle");
+
+        // Create group for x-axis labels
+        var labelsGroupX = chartGroup.append("g")
+            .attr("transform", `translate(${width / 2}, ${height + 20})`);
+
+        var allXLabels = {};
+        for (let i = 0; i < xKeys.length; i++) {
+            if (i == 0) {
+               allXLabels[`${xKeys[i]}`] = labelsGroupX.append("text")
+                    .attr("x", 0)
+                    .attr("y", 20) 
+                    .attr("value", `${xKeys[i]}`)
+                    .classed("active",true)
+                    .text(xAxisLabels[i]);
+            }
+            else {
+                allXLabels[`${xKeys[i]}`] = labelsGroupX.append("text")
+                    .attr("x", 0)
+                    .attr("y", (i+1)*20) 
+                    .attr("value", `${xKeys[i]}`)
+                    .classed("inactive",true)
+                    .text(xAxisLabels[i]);
+            }
+        }
+
+        
+        // Create group for y-axis labels
+        var labelsGroupY = chartGroup.append("g")
+            .attr("transform", "rotate(-90)");
+
+        var allYLabels = [];
+        for (let j = 0; j < yKeys.length; j++) {
+            if (j == 0) {
+                allYLabels[`${yKeys[j]}`] = chartGroup.append("text")
+                    .attr("y", 0 - margin.left - 20*j)
+                    .attr("x", 0 - (height / 2))
+                    .attr("dy", "1em")
+                    .classed("active",true)
+                    .text(yAxisLabels[j]);
+                    
+            }
+            else {
+                allYLabels[`${yKeys[j]}`] = chartGroup.append("text")
+                    .attr("y", 0 - margin.left - 20*j)
+                    .attr("x", 0 - (height / 2))
+                    .attr("dy", "1em")
+                    .classed("inactive",true)
+                    .text(yAxisLabels[j]);
+            }
+            
+        }
+        // update ToolTip
+        var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, xKeys, xTipLabels, yKeys, yTipLabels);
+
+        labelsGroupX.selectAll("text")
+            .on("click",function () {
+                
+            // get value from user selection
+            var value = d3.select(this).attr("value");
+
+            if (value !== chosenXAxis) {
+
+                // replaces chosenXAxis with value
+                chosenXAxis = value;
+        
+                // console.log(chosenXAxis)
+        
+                // functions here found above csv import
+                // updates x scale for new data
+                xLinearScale = xScale(dataObject, chosenXAxis);
+        
+                // updates x axis with transition
+                xAxis = renderXAxes(xLinearScale, xAxis);
+        
+                // updates circles with new x values
+                circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
+        
+                // updates tooltips with new info
+                circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+        
+                // changes classes to change bold text
+                if (chosenXAxis === "num_albums") {
+                  albumsLabel
+                    .classed("active", true)
+                    .classed("inactive", false);
+                  hairLengthLabel
+                    .classed("active", false)
+                    .classed("inactive", true);
+                }
+                else {
+                  albumsLabel
+                    .classed("active", false)
+                    .classed("inactive", true);
+                  hairLengthLabel
+                    .classed("active", true)
+                    .classed("inactive", false);
+                }
+              }
+
+
+            })
+
+
+
     })
 
 } 
