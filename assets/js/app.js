@@ -34,13 +34,7 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
     var chartGroup = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Initial Params
-    var chosenXAxis = "poverty";
-    var chosenXAxis = "poverty";
-    var chosenXAxis = "poverty";
-    var chosenXAxis = "poverty";
-    var chosenXAxis = "poverty";
-
+ 
     // function used for updating x-scale var upon click on axis label
     function xScale(Data, chosenXAxis) {
         // create scales
@@ -151,11 +145,14 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
         });
     
         return circlesGroup;
-    }
+    }// end of function updateToolTip
 
     // Now enter the csv file and generate graph
     d3.csv(dataPath).then(function (dataObject, err) {
         if (err) throw err;
+        // Initial Params
+        var chosenXAxis = xKeys[0];
+        var chosenYAxis = yKeys[0];
 
         // convert string to numbers
         for (let i = 0; i < xKeys.length; i++) {
@@ -180,7 +177,7 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
             .call(bottomAxis);
 
         // append y axis
-        chartGroup.append("g")
+        var yAxis = chartGroup.append("g")
             .call(leftAxis);
 
         // append initial circles
@@ -215,7 +212,7 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
                     .classed("inactive",true)
                     .text(xAxisLabels[i]);
             }
-        }
+        }// end of for loop
 
         
         // Create group for y-axis labels
@@ -242,10 +239,12 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
                     .text(yAxisLabels[j]);
             }
             
-        }
+        }// end of for loop
+
         // update ToolTip
         var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, xKeys, xTipLabels, yKeys, yTipLabels);
 
+        // Update graph if x axis label is clicked
         labelsGroupX.selectAll("text")
             .on("click",function () {
                 
@@ -267,35 +266,74 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
                 xAxis = renderXAxes(xLinearScale, xAxis);
         
                 // updates circles with new x values
-                circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
+                circlesGroup = renderCirclesX(circlesGroup, xLinearScale, chosenXAxis);
         
                 // updates tooltips with new info
-                circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+                circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, xKeys, xTipLabels, yKeys, yTipLabels);
         
                 // changes classes to change bold text
-                if (chosenXAxis === "num_albums") {
-                  albumsLabel
-                    .classed("active", true)
-                    .classed("inactive", false);
-                  hairLengthLabel
-                    .classed("active", false)
-                    .classed("inactive", true);
+                for (let i = 0; i < xKeys.length; i++) {
+                    if (xKeys[i] == chosenXAxis) {
+                        allXLabels[i]
+                            .classed("active",true)
+                            .classed("inactive",false)
+                    }
+                    else {
+                        allXLabels[i]
+                            .classed("active",false)
+                            .classed("inactive",true)
+                    }                    
                 }
-                else {
-                  albumsLabel
-                    .classed("active", false)
-                    .classed("inactive", true);
-                  hairLengthLabel
-                    .classed("active", true)
-                    .classed("inactive", false);
+
+            }
+        })// end of labelsGroupX
+
+        // Update graph if y axis label is clicked
+        labelsGroupY.selectAll("text")
+            .on("click",function () {
+                
+            // get value from user selection
+            var value = d3.select(this).attr("value");
+
+            if (value !== chosenYAxis) {
+
+                // replaces chosenXAxis with value
+                chosenYAxis = value;
+        
+                // console.log(chosenXAxis)
+        
+                // functions here found above csv import
+                // updates x scale for new data
+                yLinearScale = yScale(dataObject, chosenYAxis);
+        
+                // updates x axis with transition
+                yAxis = renderYAxes(yLinearScale, yAxis);
+        
+                // updates circles with new x values
+                circlesGroup = renderCirclesY(circlesGroup, yLinearScale, chosenYAxis);
+        
+                // updates tooltips with new info
+                circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, xKeys, xTipLabels, yKeys, yTipLabels);
+        
+                // changes classes to change bold text
+                for (let j = 0; j < yKeys.length; j++) {
+                    if (yKeys[j] == chosenYAxis) {
+                        allYLabels[j]
+                            .classed("active",true)
+                            .classed("inactive",false)
+                    }
+                    else {
+                        allYLabels[j]
+                            .classed("active",false)
+                            .classed("inactive",true)
+                    }                    
                 }
-              }
+
+            }
+        }) // end of labelsGroupY
 
 
-            })
 
+    }) // end of d3.csv().then()
 
-
-    })
-
-} 
+} // end of function scatterMultiAxis
