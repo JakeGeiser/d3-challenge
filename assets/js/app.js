@@ -1,11 +1,12 @@
-function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath) {
+function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath,
+                          xAxisLabels,yAxisLabels) {
     // params
     //// xLabels: array of x-axis labels
     //// yLabels: array of y-axis labels
     //// xKeys: keys to access data (match order of xLabels)
     //// yKeys: keys to access data (match order of yLabels)
     //// dataPath: relative path to csv file
-    
+
     // function designed to be used with any data to make scatter plot
     // code largely adapted from 16:D3/Activities/3/12
     var svgWidth = 960;
@@ -88,5 +89,91 @@ function scatterMultiAxis(xLabels,yLabels,xKeys,yKeys,dataPath) {
         return yAxis;
     }
 
+    // function used for updating circles group with a transition to
+    // new circles for both x and y axes
+    function renderCirclesX(circlesGroup, newXScale, chosenXAxis) {
+
+        circlesGroup.transition()
+          .duration(1000)
+          .attr("cx", d => newXScale(d[chosenXAxis]));
+      
+        return circlesGroup;
+      }
+
+    function renderCirclesY(circlesGroup, newYScale, chosenYAxis) {
+
+        circlesGroup.transition()
+          .duration(1000)
+          .attr("cy", d => newYScale(d[chosenYAxis]));
+      
+        return circlesGroup;
+      }
+  
+    // function used for updating circles group with new tooltip
+    function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, axisKeysX, axisLabelsX, axisKeysY, axisLabelsY) {
+    
+        var labelx;
+        var labely;
+        // Find appropriate label for each x and y axis
+        for (let i = 0; i < axisKeysX.length; i++) {
+            if (chosenXAxis === axisKeysX[i]) {
+                labelx = axisLabelsX[i];
+            }            
+            else {
+                labelx = "Nan"
+            }
+        }
+        for (let j = 0; j < axisKeysY.length; j++) {
+            if (chosenYAxis === axisKeysY[j]) {
+                labely = axisLabelsY[j];
+            }   
+            else {
+                labely = "Nan"
+            }         
+        }
+
+        var toolTip = d3.tip()
+        .attr("class", "d3-tip")
+        .offset([80, -60])
+        .html(function(d) {
+            return (`<b>${labelx}</b>: ${d[chosenXAxis]}<br>`+
+                     `<b>${labely}</b>: ${d[chosenYAxis]}`)
+        });
+    
+        circlesGroup.call(toolTip);
+    
+        circlesGroup.on("mouseover", function(data) {
+        toolTip.show(data);
+        })
+        // onmouseout event
+        .on("mouseout", function(data, index) {
+            toolTip.hide(data);
+        });
+    
+        return circlesGroup;
+    }
+
+    // Now enter the csv file and generate graph
+    d3.csv(dataPath).then(function (dataObject, err) {
+        if (err) throw err;
+
+        // convert string to numbers (x axis)
+        dataObject.forEach(function (data) {
+            for (let i = 0; i < xKeys.length; i++) {
+                data[xKeys[i]] = +data[xKeys[i]]            
+            }
+            for (let j = 0; j < yKeys.length; j++) {
+                data[yKeys[j]] = +data[yKeys[j]]            
+            } 
+        })
+
+        for (let i = 0; i < xKeys.length; i++) {
+            data[xKeys[i]] = data[xKeys[i]].map(d => +d);       
+        }
+        for (let j = 0; j < yKeys.length; j++) {
+            data[yKeys[j]] = data[yKeys[j]].map(d => +d);            
+        } 
+        
+    })
 
 } 
