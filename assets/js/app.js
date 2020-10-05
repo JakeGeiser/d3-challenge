@@ -332,8 +332,18 @@ function scatterMultiAxis(xTipLabels,yTipLabels,xKeys,yKeys,dataPath,
             }
         }) // end of labelsGroupY
 
-
-
     }) // end of d3.csv().then()
 
 } // end of function scatterMultiAxis
+// x: Poverty, Age, income
+// y: Obese, Smokes, no Healthcare
+var xKeyInput = ["poverty","age","income"];
+var xAxisLabelsInput = ["Poverty (%)","Age","Household Income"];
+var xTipLabelsInput = ["Povery (%)","Age","Income"];
+
+var yKeyInput = ["obesity","smokes","healthcare"];
+var yAxisLabelsInput = ["Obesity (%)","Smokes (%)","No Healthcare (%)"];
+var yTipLabelsInput = ["Obesity (%)","Smokes (%)","No Healthcare (%)"];
+
+scatterMultiAxis(xTipLabelsInput,yTipLabelsInput,xKeyInput,yKeyInput,"../data/data.csv",
+    xAxisLabelsInput,yAxisLabelsInput);
