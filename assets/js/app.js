@@ -4,7 +4,7 @@ var svgHeight = 500;
 var margin = {
   top: 20,
   right: 40,
-  bottom: 80,
+  bottom: 100,
   left: 100
 };
 
@@ -30,10 +30,12 @@ var svg = d3
 
 // Append an SVG group
 var chartGroup = svg.append("g")
-  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  .attr("transform", `translate(${margin.left}, ${margin.top})`)
+  .classed("transform-g",true);
 
 // Initial Params
 var chosenXAxis = "poverty";
+var chosenYAxis = "healthcare";
 
 // function used for updating x-scale var upon click on axis label
 function xScale(scatData, chosenXAxis) {
@@ -48,6 +50,16 @@ function xScale(scatData, chosenXAxis) {
 
 }
 
+function yScale(scatData, chosenYAxis) {
+    // create scales
+    var yLinearScale = d3.scaleLinear()
+    .domain([0, d3.max(scatData, d => d[chosenYAxis])*1.2])
+    .range([height, 0]);
+    
+    return yLinearScale;
+    
+    }
+
 // function used for updating xAxis var upon click on axis label
 function renderAxes(newXScale, xAxis) {
   var bottomAxis = d3.axisBottom(newXScale);
@@ -61,33 +73,36 @@ function renderAxes(newXScale, xAxis) {
 
 // function used for updating circles group with a transition to
 // new circles
-function renderCircles(circlesGroup, newXScale, chosenXAxis) {
+function renderCircles(circlesGroup, newXScale, chosenXAxis, newYScale, chosenYAxis) {
 
-  circlesGroup.transition()
-    .duration(1000)
-    .attr("cx", d => newXScale(d[chosenXAxis]));
+    circlesGroup.transition()
+        .duration(1000)
+        .attr("transform",function (d) {
+            return `translate(${newXScale(d[chosenXAxis])},${newYScale(d[chosenYAxis])})`});
 
   return circlesGroup;
 }
 
 // function used for updating circles group with new tooltip
-function updateToolTip(chosenXAxis, circlesGroup) {
+function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
 
   var labelx = tipLabels[chosenXAxis]
-  var labely = tipLabels.healthcare
+  var labely = tipLabels[chosenYAxis]
 
   var toolTip = d3.tip()
     .attr("class", "d3-tip")
-    .offset([80, -60])
+    .offset([-10, 60])
     .html(function(d) {
-      return (`<b>${labelx}</b>: ${d[chosenXAxis]}<br>
-                <b>${labely}</b>:${d.healthcare}`);
-    });
+      return (` <strong><u>${d.state}</u></strong><br>
+                <b>${labelx}</b>: ${d[chosenXAxis]}<br>
+                <b>${labely}</b>: ${d[chosenYAxis]}`);
+    })
+    .style("cursor","pointer");
 
   circlesGroup.call(toolTip);
 
   circlesGroup.on("mouseover", function(data) {
-    toolTip.show(data);
+    toolTip.show(data,this);
   })
     // onmouseout event
     .on("mouseout", function(data, index) {
@@ -115,9 +130,7 @@ d3.csv("assets/data/data.csv").then(function(scatData, err) {
   var xLinearScale = xScale(scatData, chosenXAxis);
 
   // Create y scale function
-  var yLinearScale = d3.scaleLinear()
-    .domain([0, d3.max(scatData, d => d.healthcare)])
-    .range([height, 0]);
+  var yLinearScale = yScale(scatData, chosenYAxis);
 
   // Create initial axis functions
   var bottomAxis = d3.axisBottom(xLinearScale);
@@ -133,18 +146,22 @@ d3.csv("assets/data/data.csv").then(function(scatData, err) {
   chartGroup.append("g")
     .call(leftAxis);
 
-  // append initial circles
-  var circlesGroup = chartGroup.selectAll("circle")
+  // append a svg group for each state circle and text 
+  var circlesGroup = chartGroup.selectAll('.circle-text')
     .data(scatData)
     .enter()
-    .append("circle")
-    .classed("stateCircle", true)
-    .attr("cx", d => xLinearScale(d[chosenXAxis]))
-    .attr("cy", d => yLinearScale(d.healthcare))
-    .attr("r", 20)
-    .append("text")
-        .text(d => d.abbr)
-        .classed("stateText",true);
+    .append('g')
+    .classed("circle-text",true)
+    .attr("transform",function (d) { // use translate to move group so text and circle move together
+        return `translate(${xLinearScale(d[chosenXAxis])},${yLinearScale(d[chosenYAxis])})`
+    })
+    .html(function (d) {
+        return `<circle cx=0 cy=0 r=15 class="stateCircle"></circle>
+                <text text-anchor="middle" x=0 y=6 class="stateText">${d.abbr}</text>`
+    })
+
+
+
 
   // Create group for two x-axis labels
   var labelsGroup = chartGroup.append("g")
@@ -181,10 +198,11 @@ d3.csv("assets/data/data.csv").then(function(scatData, err) {
     .attr("x", 0 - (height / 2))
     .attr("dy", "1em")
     .classed("atext", true)
+    .classed("active", true)
     .text("Lacks Healthcare (%)");
 
   // updateToolTip function above csv import
-//   var circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+  circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
   // x axis labels event listener
   labelsGroup.selectAll("text")
@@ -201,15 +219,17 @@ d3.csv("assets/data/data.csv").then(function(scatData, err) {
         // functions here found above csv import
         // updates x scale for new data
         xLinearScale = xScale(scatData, chosenXAxis);
+        // update y scale for new data
+        yLinearScale = yScale(scatData, chosenYAxis);
 
         // updates x axis with transition
         xAxis = renderAxes(xLinearScale, xAxis);
 
         // updates circles with new x values
-        circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
+        circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis, yLinearScale, chosenYAxis);
 
         // updates tooltips with new info
-        circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
         // changes classes to change bold text
         if (chosenXAxis === "poverty") {
