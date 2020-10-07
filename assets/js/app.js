@@ -61,7 +61,7 @@ function yScale(scatData, chosenYAxis) {
     }
 
 // function used for updating xAxis var upon click on axis label
-function renderAxes(newXScale, xAxis) {
+function renderXAxes(newXScale, xAxis) {
   var bottomAxis = d3.axisBottom(newXScale);
 
   xAxis.transition()
@@ -161,8 +161,6 @@ d3.csv("assets/data/data.csv").then(function(scatData, err) {
     })
 
 
-
-
   // Create group for two x-axis labels
   var labelsGroup = chartGroup.append("g")
     .attr("transform", `translate(${width / 2}, ${height + 20})`);
@@ -223,7 +221,7 @@ d3.csv("assets/data/data.csv").then(function(scatData, err) {
         yLinearScale = yScale(scatData, chosenYAxis);
 
         // updates x axis with transition
-        xAxis = renderAxes(xLinearScale, xAxis);
+        xAxis = renderXAxes(xLinearScale, xAxis);
 
         // updates circles with new x values
         circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis, yLinearScale, chosenYAxis);
